@@ -1,5 +1,6 @@
 import HeaderButtons from "../../components/HeaderButtons";
 import HistoryItem from "../../components/HistoryItem";
+import { Route, Routes } from "react-router-dom";
 import "./index.scss";
 
 const IndexPage = () => {
