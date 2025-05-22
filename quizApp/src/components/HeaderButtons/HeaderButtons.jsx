@@ -7,8 +7,9 @@ const HeaderButtons = () => {
       <Link to="/test">
         <button className="header-buttons__btn">Запустить тест</button>
       </Link>
-
-      <button className="header-buttons__btn">Редактировать тест</button>
+      <Link to="/edit">
+        <button className="header-buttons__btn">Редактировать тест</button>
+      </Link>
     </div>
   );
 };
