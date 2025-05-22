@@ -1,0 +1,22 @@
+.header-buttons {
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 20px;
+
+	&__btn {
+		padding: 14px 20px;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		background-color: white;
+		cursor: pointer;
+		font-size: 14px;
+		transition:
+			backround-color 0.3s ease-in-out,
+			color 0.3s ease-in-out;
+
+		&:hover {
+			background-color: #000;
+			color: #fff;
+		}
+	}
+}

@@ -1,0 +1,15 @@
+.indexPage {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	&__wrapper {
+		margin-top: 10%;
+		display: flex;
+		flex-direction: column;
+	}
+
+	&__title {
+		margin-top: 35px;
+		margin-bottom: 15px;
+	}
+}

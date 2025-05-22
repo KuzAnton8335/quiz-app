@@ -1,0 +1,19 @@
+.history-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 10px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	margin-bottom: 10px;
+}
+
+.date-time {
+	display: flex;
+	flex-direction: column;
+	padding-right: 10px;
+}
+
+.result {
+	padding-left: 15px;
+}
