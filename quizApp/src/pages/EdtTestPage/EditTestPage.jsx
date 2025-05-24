@@ -1,174 +1,240 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import "./edittestpage.scss";
-import { initialQuestions } from "./initialQuestions";
 
-const EditTestPage = () => {
-  // useState для хранения вопросов теста
-  const [questions, setQuestions] = useState(initialQuestions);
+const TestEditor = () => {
+  // Состояние для хранения вопросов и ответов
+  const [questions, setQuestions] = useState([
+    {
+      id: 1,
+      text: "Вопрос №1",
+      answers: [
+        {
+          id: 1,
+          text: "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...",
+        },
+        {
+          id: 2,
+          text: "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...",
+        },
+        {
+          id: 3,
+          text: "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...",
+        },
+      ],
+    },
+    {
+      id: 2,
+      text: "Вопрос №2",
+      answers: [],
+    },
+    {
+      id: 3,
+      text: "Вопрос №3",
+      answers: [],
+    },
+  ]);
 
-  // добавление нового вопроса
-  const addQuestion = () => {
-    const newQuestionId = questions.length + 1;
-    setQuestions([
-      ...questions,
-      {
-        id: newQuestionId,
-        text: `Вопрос №${newQuestionId}`,
-        options: [],
-      },
-    ]);
-  };
+  // Состояние для отслеживания свернутых вопросов
+  const [collapsedQuestions, setCollapsedQuestions] = useState([]);
+  const [correctAnswers, setCorrectAnswers] = useState({}); // { questionId: answerId }
 
-  // удаление вопроca
-  const deleteQuestion = questionId => {
-    setQuestions(questions.filter(question => question.id !== questionId));
-  };
-
-  // Обнавление текста вопроca
-  const updateQuestionText = (questionId, newText) => {
-    setQuestions(
-      questions.map(q => (q.id === questionId ? { ...q, text: newText } : q))
+  // Переключение состояния свернутости вопроса
+  const toggleQuestionCollapse = questionId => {
+    setCollapsedQuestions(prev =>
+      prev.includes(questionId)
+        ? prev.filter(id => id !== questionId)
+        : [...prev, questionId]
     );
   };
 
-  // добавление нового варианта ответа
-  const addOption = questionId => {
-    const question = questions.find(q => q.id === questionId);
-    const newOptionId = question.options.length + 1;
+  // Переключение правильного ответа
+  const toggleCorrectAnswer = (questionId, answerId) => {
+    setCorrectAnswers(prev => ({
+      ...prev,
+      [questionId]: prev[questionId] === answerId ? null : answerId,
+    }));
+  };
+
+  // Удаление ответа
+  const deleteAnswer = (questionId, answerId) => {
     setQuestions(
-      questions.map(q =>
-        q.id === questionId
-          ? {
-              ...q,
-              options: [
-                ...q.options,
-                { id: newOptionId, text: "", isCorrect: false },
-              ],
-            }
-          : q
-      )
+      questions.map(q => {
+        if (q.id === questionId) {
+          return {
+            ...q,
+            answers: q.answers.filter(a => a.id !== answerId),
+          };
+        }
+        return q;
+      })
+    );
+
+    // Если удаляемый ответ был правильным, сбрасываем выбор
+    if (correctAnswers[questionId] === answerId) {
+      setCorrectAnswers(prev => ({
+        ...prev,
+        [questionId]: null,
+      }));
+    }
+  };
+
+  // Обработчики изменений
+  const handleQuestionChange = (id, newText) => {
+    setQuestions(
+      questions.map(q => (q.id === id ? { ...q, text: newText } : q))
     );
   };
 
-  // удаление варианта ответа
-  const deleteOption = (questionId, optionId) => {
+  const handleAnswerChange = (questionId, answerId, newText) => {
     setQuestions(
-      questions.map(q =>
-        q.id === questionId
-          ? {
-              ...q,
-              options: q.options.filter(o => o.id !== optionId),
-            }
-          : q
-      )
+      questions.map(q => {
+        if (q.id === questionId) {
+          return {
+            ...q,
+            answers: q.answers.map(a =>
+              a.id === answerId ? { ...a, text: newText } : a
+            ),
+          };
+        }
+        return q;
+      })
     );
   };
 
-  // обновление текста варианта ответа
-  const updateOptionText = (questionId, optionId, newText) => {
+  const addAnswer = questionId => {
     setQuestions(
-      questions.map(q =>
-        q.id === questionId
-          ? {
-              ...q,
-              options: q.options.map(o =>
-                o.id === optionId ? { ...o, text: newText } : o
-              ),
-            }
-          : q
-      )
+      questions.map(q => {
+        if (q.id === questionId) {
+          const newId =
+            q.answers.length > 0
+              ? Math.max(...q.answers.map(a => a.id)) + 1
+              : 1;
+          return {
+            ...q,
+            answers: [...q.answers, { id: newId, text: "" }],
+          };
+        }
+        return q;
+      })
     );
   };
 
-  // Изменение статуса правильного ответа
-  const toggleCorrectOption = (questionId, optionId) => {
-    setQuestions(
-      questions.map(q =>
-        q.id === questionId
-          ? {
-              ...q,
-              options: q.options.map(o =>
-                o.id === optionId ? { ...o, isCorrect: !o.isCorrect } : o
-              ),
-            }
-          : q
-      )
-    );
-  };
-
-  // Сохранение теста
   const saveTest = () => {
+    // Здесь будет логика сохранения теста
     console.log("Тест сохранен:", questions);
-    // Здесь можно отправить данные на сервер или выполнить другие действия
+    alert("Тест успешно сохранен!");
   };
 
   return (
-    <div className="edit-testpage">
-      <h1>Редактирование теста</h1>
+    <div className="test-editor">
+      <h1 className="test-editor__title">Редактирование теста</h1>
 
-      {/* Список вопросов */}
-      <div className="questions-list">
-        {questions.map(question => (
-          <div key={question.id} className="questions-list__card">
-            <div className="questions-list__header">
-              <input
-                type="text"
-                value={question.text}
-                onChange={e => updateQuestionText(question.id, e.target.value)}
-                placeholder="Введите текст вопроса"
-              />
-              <button onClick={() => deleteQuestion(question.id)}>
-                Удалить вопрос
+      {questions.map(question => {
+        const isCollapsed = collapsedQuestions.includes(question.id);
+
+        return (
+          <div key={question.id} className="question-block">
+            <div className="question-header">
+              <h3 className="question-block__title">Вопрос №{question.id}</h3>
+              <button
+                onClick={() => toggleQuestionCollapse(question.id)}
+                className={`question-block__open-btn ${
+                  isCollapsed ? "question-block__open-btn--collapsed" : ""
+                }`}
+              >
+                <img
+                  src="../../../public/down-arrow.svg"
+                  width={25}
+                  height={25}
+                  style={{
+                    transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)",
+                    transition: "transform 0.3s ease",
+                  }}
+                />
               </button>
             </div>
 
-            {/* Варианты ответов */}
-            <div className="options-list">
-              {question.options.map(option => (
-                <div key={option.id} className="options-list__card">
-                  <input
-                    type="text"
-                    value={option.text}
-                    onChange={e =>
-                      updateOptionText(question.id, option.id, e.target.value)
-                    }
-                    placeholder="Введите текст варианта ответа"
-                  />
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={option.isCorrect}
-                      onChange={() =>
-                        toggleCorrectOption(question.id, option.id)
+            {!isCollapsed && (
+              <>
+                <input
+                  type="text"
+                  value={question.text}
+                  onChange={e =>
+                    handleQuestionChange(question.id, e.target.value)
+                  }
+                  className="question-input"
+                />
+
+                <h4>Ответы:</h4>
+                {question.answers.map(answer => (
+                  <div key={answer.id} className="answer-block">
+                    <textarea
+                      value={answer.text}
+                      onChange={e =>
+                        handleAnswerChange(
+                          question.id,
+                          answer.id,
+                          e.target.value
+                        )
                       }
+                      className="answer-input"
                     />
-                    Правильный
-                  </label>
-                  <button onClick={() => deleteOption(question.id, option.id)}>
-                    Удалить
-                  </button>
-                </div>
-              ))}
-            </div>
+                    <div className="answer-actions">
+                      <button
+                        onClick={() =>
+                          toggleCorrectAnswer(question.id, answer.id)
+                        }
+                        className={`correct-answer-btn ${
+                          correctAnswers[question.id] === answer.id
+                            ? "active"
+                            : ""
+                        }`}
+                      >
+                        <img
+                          src="../../../public/checkmark.svg"
+                          width={20}
+                          height={20}
+                          alt="Правильный ответ"
+                        />
+                      </button>
+                      <button
+                        onClick={() => deleteAnswer(question.id, answer.id)}
+                        className="delete-answer-btn"
+                      >
+                        <img
+                          src="../../../public/trash.svg"
+                          width={20}
+                          height={20}
+                          alt="Удалить ответ"
+                        />
+                      </button>
+                    </div>
+                  </div>
+                ))}
 
-            {/* Кнопка добавления варианта ответа */}
-            <button onClick={() => addOption(question.id)}>
-              Добавить вариант ответа
-            </button>
+                <button
+                  onClick={() => addAnswer(question.id)}
+                  className="add-answer-btn"
+                >
+                  Добавить ответ
+                </button>
+              </>
+            )}
           </div>
-        ))}
-      </div>
+        );
+      })}
 
-      {/* Кнопки управления */}
-      <div className="controls">
-        <button onClick={addQuestion}>Добавить вопрос</button>
-        <button onClick={saveTest} className="controls__save-button">
+      <div className="actions">
+        <Link to="/">
+          <button className="back-btn">Назад</button>
+        </Link>
+        <button onClick={saveTest} className="save-btn">
           Сохранить
         </button>
-        <button onClick={() => (window.location.href = "/")}>Назад</button>
       </div>
     </div>
   );
 };
 
-export default EditTestPage;
+export default TestEditor;

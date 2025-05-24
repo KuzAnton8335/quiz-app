@@ -1,91 +1,143 @@
-.edit-testpage {
-	padding: 20px;
-	max-width: 600px;
+.test-editor {
+	max-width: 800px;
 	margin: 0 auto;
+	padding: 20px;
+
+	&__title {
+		padding-bottom: 15px;
+	}
 }
 
-.questions-list {
-	margin-top: 20px;
+.question-block {
+	margin-bottom: 30px;
+	padding: 15px;
+	border: 1px solid #ddd;
+	border-radius: 5px;
+	position: relative;
 
-	&__card {
-		border: 1px solid #ccc;
-		border-radius: 4px;
-		padding: 10px;
-		margin-bottom: 20px;
+	&__title {
+		padding-bottom: 15px;
 	}
 
-	&__header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 10px;
-	}
+	&__open-btn {
+		position: absolute;
+		top: 55px;
+		right: 87px;
 
-	&__header input {
-		width: 80%;
-		padding: 5px;
-		border: 1px solid #ccc;
-		border-radius: 4px;
-	}
-
-	&__header button {
-		padding: 5px 10px;
-		background-color: #f44336;
-		color: white;
+		background: none;
 		border: none;
-		border-radius: 4px;
 		cursor: pointer;
+		padding: 5px;
+
+		&:focus {
+			outline: none;
+		}
+
+		&--collapsed {
+			top: 20px;
+		}
 	}
 }
 
-.options-list {
+.question-input {
+	width: 90%;
+	padding: 8px;
+	margin-bottom: 15px;
+	font-size: 16px;
+}
+
+.question-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	cursor: pointer;
+}
+
+.answer-block {
+	display: flex;
+	align-items: center;
+	gap: 10px;
 	margin-bottom: 10px;
 
-	&__card {
-		display: flex;
-		align-items: center;
-		margin-bottom: 5px;
+	.answer-input {
+		flex-grow: 1;
+		min-height: 50px;
+		padding: 8px;
 		border: 1px solid #ccc;
 		border-radius: 4px;
-		padding: 5px;
+		resize: vertical;
 	}
 
-	&__card input[type="text"] {
-		flex: 1;
-		padding: 5px;
-		border: none;
-		border-radius: 4px;
-	}
+	.answer-actions {
+		display: flex;
+		flex-direction: column;
+		gap: 5px;
 
-	&__card label {
-		margin-left: 10px;
-	}
+		button {
+			background: none;
+			border: none;
+			cursor: pointer;
+			padding: 5px;
+			border-radius: 4px;
+			transition: background-color 0.2s;
 
-	&__card button {
-		margin-left: 10px;
-		padding: 5px 10px;
-		background-color: #f44336;
-		color: white;
-		border: none;
-		border-radius: 4px;
-		cursor: pointer;
+			&:hover {
+				background-color: #f0f0f0;
+			}
+		}
+
+		.correct-answer-btn {
+			&.active {
+				background-color: #e0ffe0;
+
+				img {
+					filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%);
+				}
+			}
+		}
+
+		.delete-answer-btn {
+			&:hover {
+				background-color: #ffe0e0;
+			}
+
+			img {
+				filter: invert(25%) sepia(98%) saturate(7463%) hue-rotate(356deg) brightness(95%) contrast(118%);
+			}
+		}
 	}
 }
 
-.controls {
+.add-answer-btn {
+	background-color: #4caf50;
+	color: white;
+	padding: 8px 16px;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+.actions {
 	display: flex;
+	align-items: center;
 	justify-content: space-between;
 	margin-top: 20px;
-
-	&__save-button {
-		background-color: #28a745;
-		color: white;
-	}
 }
 
-.controls button {
+.back-btn,
+.save-btn {
 	padding: 10px 20px;
 	border: none;
 	border-radius: 4px;
 	cursor: pointer;
+}
+
+.back-btn {
+	background-color: #f44336;
+	color: white;
+}
+
+.save-btn {
+	background-color: #2196f3;
+	color: white;
 }
