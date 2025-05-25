@@ -1,12 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { questions } from "./questions";
 import "./testpage.scss";
+import { fetchTestById, submitTestResults } from "../../api/api.js";
 
 const TestPage = () => {
+  // В компоненте:
+  useEffect(() => {
+    const loadTest = async () => {
+      try {
+        const testId = "6832151e7182100f171107bc"; // или получайте из URL/параметров
+        const testData = await fetchTestById(testId);
+        setTest(testData);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+    loadTest();
+  }, []);
+  
   // состояния вопросов, ответов и результатов теста
+  const [test, setTest] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState([]);
   const [showResult, setShowResult] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const totalQuestions = questions.length;
   const currentQuestion = questions[currentQuestionIndex];

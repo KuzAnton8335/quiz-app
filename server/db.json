@@ -1,0 +1,87 @@
+{
+  "_id": {
+    "$oid": "6832151e7182100f171107bc"
+  },
+  "test_title": "Пример онлайн-теста",
+  "description": "Этот тест проверяет базовые знания по разным темам",
+  "time_limit_minutes": 30,
+  "questions": [
+    {
+      "id": 1,
+      "question_text": "Какой язык программирования является статически типизированным?",
+      "question_type": "single_choice",
+      "options": [
+        {
+          "id": 1,
+          "text": "Python",
+          "is_correct": false
+        },
+        {
+          "id": 2,
+          "text": "JavaScript",
+          "is_correct": false
+        },
+        {
+          "id": 3,
+          "text": "Java",
+          "is_correct": true
+        },
+        {
+          "id": 4,
+          "text": "Ruby",
+          "is_correct": false
+        }
+      ],
+      "points": 1
+    },
+    {
+      "id": 2,
+      "question_text": "Какие из этих языков поддерживают ООП?",
+      "question_type": "multiple_choice",
+      "options": [
+        {
+          "id": 1,
+          "text": "C++",
+          "is_correct": true
+        },
+        {
+          "id": 2,
+          "text": "Python",
+          "is_correct": true
+        },
+        {
+          "id": 3,
+          "text": "HTML",
+          "is_correct": false
+        },
+        {
+          "id": 4,
+          "text": "Java",
+          "is_correct": true
+        }
+      ],
+      "points": 2
+    },
+    {
+      "id": 3,
+      "question_text": "Назовите столицу Франции",
+      "question_type": "text_answer",
+      "correct_answer": "Париж",
+      "points": 1
+    },
+    {
+      "id": 4,
+      "question_text": "Сколько будет 2 + 2 * 2?",
+      "question_type": "numeric_answer",
+      "correct_answer": 6,
+      "points": 1
+    }
+  ],
+  "passing_score": 3,
+  "feedback": {
+    "excellent": "Отличный результат!",
+    "good": "Хороший результат, но есть куда стремиться",
+    "satisfactory": "Удовлетворительно, рекомендуется повторить материал",
+    "fail": "Неудовлетворительно, необходимо изучить материал заново"
+  }
+}
