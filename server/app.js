@@ -3,33 +3,53 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 require("dotenv").config();
+const quizRoutes = require("./quizRotes/quizRotes");
 
-// соединяемся с базой данных
+//порт сервера
+const PORT = process.env.PORT || 3001;
+// подключение к базе данных mongo-db
 const connectDb = require("./config/db");
 
-//обьявляем приложение app
 const app = express();
 
-// Middleware(Промежуточный слой)
+// Middleware
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.ALLOWED_ORIGINS
+      ? process.env.ALLOWED_ORIGINS.split(",")
+      : "*",
+  })
+);
 app.use(helmet());
 app.use(morgan("dev"));
 
-// Подключаем базу данных
-connectDb();
-
-// создаем роутер
+// Routes
 app.get("/", (req, res) => {
   res.send("Quiz API is running...");
 });
 
-const PORT = process.env.PORT || 3001;
+// запросы для тестирования
+app.use("/user/quizdb", quizRoutes);
 
-// запуск сервера на порту 3001
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Error handlers (после всех роутов)
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
 });
 
-// экспорт модуля app
-module.exports = app;
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: "Internal Server Error" });
+});
+
+// Database connection and server start
+connectDb()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch(error => {
+    console.error("Database connection failed", error);
+    process.exit(1);
+  });

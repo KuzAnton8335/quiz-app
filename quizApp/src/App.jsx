@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import "./App.css";
-import EditTestPage from "./pages/EdtTestPage/EditTestPage.jsx";
+import EditTestPage from "./pages/EditTestPage/EditTestPage.jsx";
 import IndexPage from "./pages/index/index.js";
 import TestPage from "./pages/TestPage/index.js";
 

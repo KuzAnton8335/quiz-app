@@ -1,35 +1,39 @@
-import { useState, useEffect } from "react";
-import { questions } from "./questions";
+import { useEffect, useState } from "react";
+import { checkAnswers, getQuiz } from "../../api/api.js";
+import { convertOptionToString } from "./convertOptionToString.js";
 import "./testpage.scss";
-import { fetchTestById, submitTestResults } from "../../api/api.js";
 
 const TestPage = () => {
-  // В компоненте:
+  const [quiz, setQuiz] = useState(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState([]);
+  const [showResult, setShowResult] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [result, setResult] = useState(null);
+
+  // Загрузка теста при монтировании
   useEffect(() => {
-    const loadTest = async () => {
+    const loadQuiz = async () => {
       try {
-        const testId = "6832151e7182100f171107bc"; // или получайте из URL/параметров
-        const testData = await fetchTestById(testId);
-        setTest(testData);
+        const quizId = "683756df0417873adec97fac"; // или получайте из URL/параметров
+        const quizData = await getQuiz(quizId);
+        setQuiz(quizData);
         setLoading(false);
       } catch (err) {
         setError(err.message);
         setLoading(false);
       }
     };
-    loadTest();
+    loadQuiz();
   }, []);
-  
-  // состояния вопросов, ответов и результатов теста
-  const [test, setTest] = useState(null);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState([]);
-  const [showResult, setShowResult] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  const totalQuestions = questions.length;
-  const currentQuestion = questions[currentQuestionIndex];
+  if (loading) return <div>Загрузка теста...</div>;
+  if (error) return <div>Ошибка: {error}</div>;
+  if (!quiz) return <div>Тест не найден</div>;
+
+  const totalQuestions = quiz.questions.length;
+  const currentQuestion = quiz.questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
 
   // обработчик выбора ответа на вопрос
@@ -53,11 +57,21 @@ const TestPage = () => {
   const handleNextQuestion = () => {
     if (isAnswerSelected) {
       if (isLastQuestion) {
-        // Завершение теста
-        setShowResult(true);
+        handleSubmitTest();
       } else {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
       }
+    }
+  };
+
+  // Отправка результатов теста
+  const handleSubmitTest = async () => {
+    try {
+      const results = await checkAnswers(quiz._id, selectedAnswers);
+      setResult(results);
+      setShowResult(true);
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -66,20 +80,22 @@ const TestPage = () => {
     setCurrentQuestionIndex(0);
     setSelectedAnswers([]);
     setShowResult(false);
+    setResult(null);
   };
 
-  // Получение результата после завершения теста
-  const getCorrectAnswersCount = () => {
-    let correctCount = 0;
-    questions.forEach((question, index) => {
-      if (
-        selectedAnswers[index] !== undefined &&
-        selectedAnswers[index] === question.correctAnswer
-      ) {
-        correctCount++;
-      }
-    });
-    return correctCount;
+  // Ensure question text is properly rendered
+  const renderQuestionText = () => {
+    if (typeof currentQuestion.question === "string") {
+      return currentQuestion.question;
+    }
+    // If question is an object, handle it appropriately
+    if (
+      currentQuestion.question &&
+      typeof currentQuestion.question === "object"
+    ) {
+      return JSON.stringify(currentQuestion.question); // or extract the specific property you need
+    }
+    return "Question not available";
   };
 
   return (
@@ -90,7 +106,7 @@ const TestPage = () => {
           <h2 className="test-page__title">{`${
             currentQuestionIndex + 1
           }/${totalQuestions}`}</h2>
-          <p className="test-page__current">{currentQuestion.question}</p>
+          <p className="test-page__current">{renderQuestionText()}</p>
 
           {/* Варианты ответов */}
           <div className="test-page__options">
@@ -98,12 +114,12 @@ const TestPage = () => {
               <label key={index} className="test-page__label">
                 <input
                   type="radio"
-                  name={`question-${currentQuestion.id}`}
+                  name={`question-${currentQuestion._id}`}
                   value={index}
                   checked={selectedAnswers[currentQuestionIndex] === index}
                   onChange={() => handleOptionSelect(index)}
                 />
-                {option}
+                {convertOptionToString(option)}
               </label>
             ))}
           </div>
@@ -117,7 +133,11 @@ const TestPage = () => {
             >
               Предыдущий вопрос
             </button>
-            <button disabled={!isAnswerSelected} onClick={handleNextQuestion}>
+            <button
+              disabled={!isAnswerSelected}
+              onClick={handleNextQuestion}
+              className="test-page__button"
+            >
               {isLastQuestion ? "Завершить" : "Следующий вопрос"}
             </button>
           </div>
@@ -127,8 +147,9 @@ const TestPage = () => {
         <div className="test-page__result">
           <h2>Результат прохождения теста</h2>
           <p className="test-page__result-corrent">
-            Верных ответов: {getCorrectAnswersCount()} из {totalQuestions}
+            Верных ответов: {result?.correctAnswers} из {totalQuestions}
           </p>
+          <p>Процент правильных ответов: {result?.percentage}%</p>
           <button onClick={handleRestart} className="test-page__result-btn">
             Пройти еще раз
           </button>
