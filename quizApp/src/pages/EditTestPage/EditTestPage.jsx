@@ -1,43 +1,43 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useParams } from "react-router-dom";
+import { fetchQuiz, saveQuiz } from "../../actions/quizActions";
+import { resetQuizState, updateQuizLocal } from "../../actions/quizSlice";
 import "./edittestpage.scss";
 
 const TestEditor = () => {
-  // Состояние для хранения вопросов и ответов
-  const [questions, setQuestions] = useState([
-    {
-      id: 1,
-      text: "Вопрос №1",
-      answers: [
-        {
-          id: 1,
-          text: "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...",
-        },
-        {
-          id: 2,
-          text: "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...",
-        },
-        {
-          id: 3,
-          text: "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...",
-        },
-      ],
-    },
-    {
-      id: 2,
-      text: "Вопрос №2",
-      answers: [],
-    },
-    {
-      id: 3,
-      text: "Вопрос №3",
-      answers: [],
-    },
-  ]);
+  const { id } = useParams(); // для редактирования существующего теста
+  const dispatch = useDispatch();
+  const { quiz, loading, error, success } = useSelector(state => state.quiz);
 
-  // Состояние для отслеживания свернутых вопросов
+  // Локальные состояния
   const [collapsedQuestions, setCollapsedQuestions] = useState([]);
-  const [correctAnswers, setCorrectAnswers] = useState({}); // { questionId: answerId }
+  const [correctAnswers, setCorrectAnswers] = useState({});
+
+  // Загружаем тест при монтировании (если есть id)
+  useEffect(() => {
+    if (id) {
+      dispatch(fetchQuiz(id));
+    } else {
+      // Инициализируем новый тест
+      dispatch(
+        updateQuizLocal({
+          title: "Новый тест",
+          questions: [
+            {
+              id: 1,
+              text: "Вопрос №1",
+              answers: [],
+            },
+          ],
+        })
+      );
+    }
+
+    return () => {
+      dispatch(resetQuizState());
+    };
+  }, [id, dispatch]);
 
   // Переключение состояния свернутости вопроса
   const toggleQuestionCollapse = questionId => {
@@ -54,105 +54,219 @@ const TestEditor = () => {
       ...prev,
       [questionId]: prev[questionId] === answerId ? null : answerId,
     }));
+
+    // Обновляем в Redux store
+    const updatedQuestions = quiz.questions.map(q => {
+      if (q.id === questionId) {
+        return {
+          ...q,
+          answers: q.answers.map(a => ({
+            ...a,
+            isCorrect: a.id === answerId,
+          })),
+        };
+      }
+      return q;
+    });
+
+    dispatch(
+      updateQuizLocal({
+        ...quiz,
+        questions: updatedQuestions,
+      })
+    );
   };
 
   // Удаление ответа
   const deleteAnswer = (questionId, answerId) => {
-    setQuestions(
-      questions.map(q => {
-        if (q.id === questionId) {
-          return {
-            ...q,
-            answers: q.answers.filter(a => a.id !== answerId),
-          };
-        }
-        return q;
+    const updatedQuestions = quiz.questions.map(q => {
+      if (q.id === questionId) {
+        return {
+          ...q,
+          answers: q.answers.filter(a => a.id !== answerId),
+        };
+      }
+      return q;
+    });
+
+    dispatch(
+      updateQuizLocal({
+        ...quiz,
+        questions: updatedQuestions,
       })
     );
-
-    // Если удаляемый ответ был правильным, сбрасываем выбор
-    if (correctAnswers[questionId] === answerId) {
-      setCorrectAnswers(prev => ({
-        ...prev,
-        [questionId]: null,
-      }));
-    }
   };
 
   // Обработчики изменений
   const handleQuestionChange = (id, newText) => {
-    setQuestions(
-      questions.map(q => (q.id === id ? { ...q, text: newText } : q))
+    const updatedQuestions = quiz.questions.map(q =>
+      q.id === id ? { ...q, text: newText } : q
+    );
+
+    dispatch(
+      updateQuizLocal({
+        ...quiz,
+        questions: updatedQuestions,
+      })
     );
   };
 
   const handleAnswerChange = (questionId, answerId, newText) => {
-    setQuestions(
-      questions.map(q => {
-        if (q.id === questionId) {
-          return {
-            ...q,
-            answers: q.answers.map(a =>
-              a.id === answerId ? { ...a, text: newText } : a
-            ),
-          };
-        }
-        return q;
+    const updatedQuestions = quiz.questions.map(q => {
+      if (q.id === questionId) {
+        return {
+          ...q,
+          answers: q.answers.map(a =>
+            a.id === answerId ? { ...a, text: newText } : a
+          ),
+        };
+      }
+      return q;
+    });
+
+    dispatch(
+      updateQuizLocal({
+        ...quiz,
+        questions: updatedQuestions,
       })
     );
   };
 
   const addAnswer = questionId => {
-    setQuestions(
-      questions.map(q => {
-        if (q.id === questionId) {
-          const newId =
-            q.answers.length > 0
-              ? Math.max(...q.answers.map(a => a.id)) + 1
-              : 1;
-          return {
-            ...q,
-            answers: [...q.answers, { id: newId, text: "" }],
-          };
-        }
-        return q;
+    const updatedQuestions = quiz.questions.map(q => {
+      if (q.id === questionId) {
+        const newId =
+          q.answers.length > 0 ? Math.max(...q.answers.map(a => a.id)) + 1 : 1;
+        return {
+          ...q,
+          answers: [...q.answers, { id: newId, text: "", isCorrect: false }],
+        };
+      }
+      return q;
+    });
+
+    dispatch(
+      updateQuizLocal({
+        ...quiz,
+        questions: updatedQuestions,
+      })
+    );
+  };
+
+  const addQuestion = () => {
+    const newId =
+      quiz.questions.length > 0
+        ? Math.max(...quiz.questions.map(q => q.id)) + 1
+        : 1;
+
+    dispatch(
+      updateQuizLocal({
+        ...quiz,
+        questions: [
+          ...quiz.questions,
+          {
+            id: newId,
+            text: `Вопрос №${newId}`,
+            answers: [],
+          },
+        ],
+      })
+    );
+  };
+
+  const deleteQuestion = questionId => {
+    dispatch(
+      updateQuizLocal({
+        ...quiz,
+        questions: quiz.questions.filter(q => q.id !== questionId),
       })
     );
   };
 
   const saveTest = () => {
-    // Здесь будет логика сохранения теста
-    console.log("Тест сохранен:", questions);
-    alert("Тест успешно сохранен!");
+    if (!quiz.title || !quiz.questions.length) {
+      alert(
+        "Пожалуйста, добавьте хотя бы один вопрос и укажите название теста"
+      );
+      return;
+    }
+
+    // Проверяем, что у каждого вопроса есть хотя бы один ответ и один правильный ответ
+    for (const question of quiz.questions) {
+      if (!question.answers.length) {
+        alert(`Вопрос "${question.text}" не имеет ответов!`);
+        return;
+      }
+
+      if (!question.answers.some(a => a.isCorrect)) {
+        alert(`Вопрос "${question.text}" не имеет правильного ответа!`);
+        return;
+      }
+    }
+
+    dispatch(saveQuiz({ id, quizData: quiz }));
   };
+
+  if (loading && !quiz) return <div>Загрузка...</div>;
+  if (error) return <div>Ошибка: {error}</div>;
+  if (!quiz) return <div>Тест не найден</div>;
 
   return (
     <div className="test-editor">
-      <h1 className="test-editor__title">Редактирование теста</h1>
+      <h1 className="test-editor__title">
+        {id ? "Редактирование теста" : "Создание нового теста"}
+      </h1>
 
-      {questions.map(question => {
+      <div className="test-title-input">
+        <label>Название теста:</label>
+        <input
+          type="text"
+          value={quiz.title}
+          onChange={e =>
+            dispatch(
+              updateQuizLocal({
+                ...quiz,
+                title: e.target.value,
+              })
+            )
+          }
+        />
+      </div>
+
+      {quiz.questions.map(question => {
         const isCollapsed = collapsedQuestions.includes(question.id);
 
         return (
           <div key={question.id} className="question-block">
             <div className="question-header">
               <h3 className="question-block__title">Вопрос №{question.id}</h3>
-              <button
-                onClick={() => toggleQuestionCollapse(question.id)}
-                className={`question-block__open-btn ${
-                  isCollapsed ? "question-block__open-btn--collapsed" : ""
-                }`}
-              >
-                <img
-                  src="../../../public/down-arrow.svg"
-                  width={25}
-                  height={25}
-                  style={{
-                    transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)",
-                    transition: "transform 0.3s ease",
-                  }}
-                />
-              </button>
+              <div className="question-actions">
+                <button
+                  onClick={() => deleteQuestion(question.id)}
+                  className="delete-question-btn"
+                >
+                  Удалить вопрос
+                </button>
+                <button
+                  onClick={() => toggleQuestionCollapse(question.id)}
+                  className={`question-block__open-btn ${
+                    isCollapsed ? "question-block__open-btn--collapsed" : ""
+                  }`}
+                >
+                  <img
+                    src="/down-arrow.svg"
+                    width={25}
+                    height={25}
+                    style={{
+                      transform: isCollapsed
+                        ? "rotate(-90deg)"
+                        : "rotate(0deg)",
+                      transition: "transform 0.3s ease",
+                    }}
+                    alt={isCollapsed ? "Развернуть" : "Свернуть"}
+                  />
+                </button>
+              </div>
             </div>
 
             {!isCollapsed && (
@@ -186,13 +300,11 @@ const TestEditor = () => {
                           toggleCorrectAnswer(question.id, answer.id)
                         }
                         className={`correct-answer-btn ${
-                          correctAnswers[question.id] === answer.id
-                            ? "active"
-                            : ""
+                          answer.isCorrect ? "active" : ""
                         }`}
                       >
                         <img
-                          src="../../../public/checkmark.svg"
+                          src="/checkmark.svg"
                           width={20}
                           height={20}
                           alt="Правильный ответ"
@@ -203,7 +315,7 @@ const TestEditor = () => {
                         className="delete-answer-btn"
                       >
                         <img
-                          src="../../../public/trash.svg"
+                          src="/trash.svg"
                           width={20}
                           height={20}
                           alt="Удалить ответ"
@@ -225,14 +337,29 @@ const TestEditor = () => {
         );
       })}
 
+      <button onClick={addQuestion} className="add-question-btn">
+        Добавить вопрос
+      </button>
+
       <div className="actions">
         <Link to="/">
           <button className="back-btn">Назад</button>
         </Link>
-        <button onClick={saveTest} className="save-btn">
-          Сохранить
+        <button onClick={saveTest} className="save-btn" disabled={loading}>
+          {loading ? "Сохранение..." : "Сохранить"}
         </button>
       </div>
+
+      {success && (
+        <div className="success-message">
+          Тест успешно сохранен!
+          {id ? (
+            <Link to={`/test/${id}`}>Перейти к тесту</Link>
+          ) : (
+            <Link to="/">Вернуться на главную</Link>
+          )}
+        </div>
+      )}
     </div>
   );
 };

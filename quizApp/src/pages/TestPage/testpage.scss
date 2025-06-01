@@ -62,3 +62,24 @@
 		cursor: pointer;
 	}
 }
+
+.detailed-results ul {
+	list-style: none;
+	padding: 0;
+}
+
+.detailed-results li {
+	padding: 8px;
+	margin: 4px 0;
+	border-radius: 4px;
+}
+
+.detailed-results .correct {
+	background-color: #e6f7e6;
+	color: #2e7d32;
+}
+
+.detailed-results .incorrect {
+	background-color: #ffebee;
+	color: #c62828;
+}

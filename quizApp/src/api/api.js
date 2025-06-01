@@ -23,12 +23,31 @@ export const getQuiz = async id => {
   }
 };
 
-// Проверить ответы
+// Проверить ответы и сохранить в историю
 export const checkAnswers = async (quizId, answers) => {
   try {
     const response = await axios.post(`${API_URL}/${quizId}/check-answers`, {
       answers,
     });
+
+    // Сохраняем результат в историю
+    const now = new Date();
+    const date = now.toLocaleDateString("ru-RU");
+    const time = now.toLocaleTimeString("ru-RU");
+
+    const historyItem = {
+      date,
+      time,
+      correct: response.data.correctCount,
+      total: response.data.totalQuestions,
+    };
+
+    const savedHistory = JSON.parse(
+      localStorage.getItem("quizHistory") || "[]"
+    );
+    const updatedHistory = [historyItem, ...savedHistory];
+    localStorage.setItem("quizHistory", JSON.stringify(updatedHistory));
+
     return response.data;
   } catch (error) {
     console.error("Error checking answers:", error);
@@ -36,13 +55,13 @@ export const checkAnswers = async (quizId, answers) => {
   }
 };
 
-// Создать новый квиз (админ)
-export const createQuiz = async quizData => {
+// Обновить квиз (админ)
+export const updateQuiz = async (id, quizData) => {
   try {
-    const response = await axios.post(API_URL, quizData);
+    const response = await axios.put(`${API_URL}/${id}`, quizData);
     return response.data;
   } catch (error) {
-    console.error("Error creating quiz:", error);
+    console.error("Error updating quiz:", error);
     throw error;
   }
 };

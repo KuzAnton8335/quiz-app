@@ -1,15 +1,38 @@
+import { useEffect, useState } from "react";
 import HeaderButtons from "../../components/HeaderButtons";
 import HistoryItem from "../../components/HistoryItem";
-import { Route, Routes } from "react-router-dom";
 import "./index.scss";
 
 const IndexPage = () => {
-  // Данные истории прохождений
-  const historyData = [
-    { date: "01.01.2023", time: "16:46:37", correct: 5, total: 10 },
-    { date: "01.01.2023", time: "16:46:37", correct: 4, total: 10 },
-    { date: "01.01.2023", time: "16:46:37", correct: 5, total: 10 },
-  ];
+  // История прохождений
+  const [historyData, setHistoryData] = useState([]);
+
+  // Загрузка истории из localStorage при монтировании компонента
+  useEffect(() => {
+    const savedHistory = localStorage.getItem("quizHistory");
+    if (savedHistory) {
+      setHistoryData(JSON.parse(savedHistory));
+    }
+  }, []);
+
+  // Функция для добавления новой записи в историю
+  const addHistoryItem = (correct, total) => {
+    const now = new Date();
+    const date = now.toLocaleDateString("ru-RU");
+    const time = now.toLocaleTimeString("ru-RU");
+
+    const newItem = {
+      date,
+      time,
+      correct,
+      total,
+    };
+
+    const updatedHistory = [newItem, ...historyData];
+    setHistoryData(updatedHistory);
+    localStorage.setItem("quizHistory", JSON.stringify(updatedHistory));
+  };
+
   // разметка
   return (
     <div className="indexPage">
@@ -21,9 +44,13 @@ const IndexPage = () => {
 
         {/* Список историй */}
         <div className="history-list">
-          {historyData.map((item, index) => (
-            <HistoryItem key={index} {...item} />
-          ))}
+          {historyData.length > 0 ? (
+            historyData.map((item, index) => (
+              <HistoryItem key={index} {...item} />
+            ))
+          ) : (
+            <p>Нет данных о прохождениях</p>
+          )}
         </div>
       </div>
     </div>

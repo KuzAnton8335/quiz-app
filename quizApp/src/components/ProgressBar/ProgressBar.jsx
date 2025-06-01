@@ -1,3 +1,4 @@
+// ProgressBar.js
 import "./progressBar.scss";
 
 const ProgressBar = ({ correct, total }) => {

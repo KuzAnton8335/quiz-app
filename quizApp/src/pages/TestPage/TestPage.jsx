@@ -10,7 +10,7 @@ const TestPage = () => {
   const [showResult, setShowResult] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState({});
 
   // Загрузка теста при монтировании
   useEffect(() => {
@@ -18,6 +18,7 @@ const TestPage = () => {
       try {
         const quizId = "683756df0417873adec97fac"; // или получайте из URL/параметров
         const quizData = await getQuiz(quizId);
+        console.log("Загруженный тест:", quizData);
         setQuiz(quizData);
         setLoading(false);
       } catch (err) {
@@ -27,6 +28,25 @@ const TestPage = () => {
     };
     loadQuiz();
   }, []);
+
+  // Эффект для загрузки результатов при изменении selectedAnswers
+  useEffect(() => {
+    if (showResult && selectedAnswers.length > 0 && quiz) {
+      const fetchResults = async () => {
+        try {
+          setLoading(true);
+          const results = await checkAnswers(quiz._id, selectedAnswers);
+          console.log("API Response:", results);
+          setResult(results);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchResults();
+    }
+  }, [showResult, selectedAnswers, quiz]);
 
   if (loading) return <div>Загрузка теста...</div>;
   if (error) return <div>Ошибка: {error}</div>;
@@ -67,11 +87,15 @@ const TestPage = () => {
   // Отправка результатов теста
   const handleSubmitTest = async () => {
     try {
+      setLoading(true);
       const results = await checkAnswers(quiz._id, selectedAnswers);
+      console.log("API Response:", results);
       setResult(results);
       setShowResult(true);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -83,7 +107,7 @@ const TestPage = () => {
     setResult(null);
   };
 
-  // Ensure question text is properly rendered
+  // Убедитеся, что текст вопроса правильно отображен
   const renderQuestionText = () => {
     if (typeof currentQuestion.question === "string") {
       return currentQuestion.question;
@@ -146,10 +170,33 @@ const TestPage = () => {
         // Результат после завершения теста
         <div className="test-page__result">
           <h2>Результат прохождения теста</h2>
-          <p className="test-page__result-corrent">
-            Верных ответов: {result?.correctAnswers} из {totalQuestions}
-          </p>
-          <p>Процент правильных ответов: {result?.percentage}%</p>
+          {loading ? (
+            <div>Загрузка результатов...</div>
+          ) : (
+            <>
+              <p className="test-page__result-corrent">
+                Верных ответов: {result?.correctAnswers} из{" "}
+                {quiz.questions.length}
+              </p>
+              <p>Процент правильных ответов: {result?.percentage}%</p>
+
+              <div className="detailed-results">
+                <h3>Детализация ответов:</h3>
+                <ul>
+                  {result.results?.map((item, index) => (
+                    <li
+                      key={index}
+                      className={item.isCorrect ? "correct" : "incorrect"}
+                    >
+                      Вопрос {index + 1}: Ваш ответ - {item.userAnswer + 1}(
+                      {item.isCorrect ? "✓ Верно" : "✗ Неверно"})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
+
           <button onClick={handleRestart} className="test-page__result-btn">
             Пройти еще раз
           </button>
@@ -161,5 +208,4 @@ const TestPage = () => {
     </div>
   );
 };
-
 export default TestPage;

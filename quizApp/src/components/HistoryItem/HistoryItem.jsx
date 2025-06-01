@@ -1,3 +1,4 @@
+// HistoryItem.js
 import ProgressBar from "../ProgressBar";
 import "./historyItem.scss";
 
