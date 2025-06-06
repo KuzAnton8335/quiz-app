@@ -29,6 +29,7 @@ export const checkAnswers = async (quizId, answers) => {
     const response = await axios.post(`${API_URL}/${quizId}/check-answers`, {
       answers,
     });
+    console.log(response.answers);
 
     // Сохраняем результат в историю
     const now = new Date();
@@ -47,7 +48,6 @@ export const checkAnswers = async (quizId, answers) => {
     );
     const updatedHistory = [historyItem, ...savedHistory];
     localStorage.setItem("quizHistory", JSON.stringify(updatedHistory));
-
     return response.data;
   } catch (error) {
     console.error("Error checking answers:", error);

@@ -11,7 +11,6 @@ const TestPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [result, setResult] = useState({});
-  console.log(selectedAnswers);
 
   // Загрузка теста при монтировании
   useEffect(() => {
@@ -70,10 +69,17 @@ const TestPage = () => {
   const handleSubmitTest = async () => {
     try {
       setLoading(true);
-      // Отправляем только ID теста и выбранные ответы
       const response = await checkAnswers(quiz._id, selectedAnswers);
-      console.log("API Response:", response);
-      setResult(response); // Сохраняем ответ сервера (если нужен для чего-то еще)
+      console.log("Full API response:", response); // Проверяем структуру
+
+      setResult({
+        correctAnswers: response.correctCount, // Используем correctCount вместо correctAnswers
+        percentage: Math.round(
+          (response.correctCount / response.totalQuestions) * 100
+        ),
+        totalQuestions: response.totalQuestions,
+      });
+
       setShowResult(true);
     } catch (err) {
       setError(err.message);
@@ -104,9 +110,6 @@ const TestPage = () => {
     }
     return "Question not available";
   };
-
-  console.log("Quiz structure:", quiz);
-  console.log("Current question:", currentQuestion);
 
   return (
     <div className="test-page">
@@ -160,65 +163,68 @@ const TestPage = () => {
             <div>Загрузка результатов...</div>
           ) : (
             <>
-              <p className="test-page__result-corrent">
-                Верных ответов: {result?.correctAnswers ?? 0} из{" "}
-                {quiz.questions.length}
-              </p>
-              <p>Процент правильных ответов: {result?.percentage ?? 0}%</p>
+              {result ? (
+                <>
+                  <p className="test-page__result-corrent">
+                    Верных ответов:{" "}
+                    {result?.correctAnswers ??
+                      quiz.questions.filter(
+                        (q, i) => q.correctAnswer === selectedAnswers[i]
+                      ).length}{" "}
+                    из {quiz.questions.length}
+                  </p>
+                  <p>
+                    Процент правильных ответов:{" "}
+                    {result?.percentage ??
+                      Math.round(
+                        (quiz.questions.filter(
+                          (q, i) => q.correctAnswer === selectedAnswers[i]
+                        ).length /
+                          quiz.questions.length) *
+                          100
+                      )}
+                    %
+                  </p>
+                </>
+              ) : (
+                <p>Не удалось загрузить результаты</p>
+              )}
 
               <div className="detailed-results">
                 <h3>Детализация ответов:</h3>
-                {quiz.questions.map((question, index) => {
-                  const userAnswerIndex = selectedAnswers[index]; // Индекс выбранного ответа (например, 1)
-                  const userAnswerText = question.options[userAnswerIndex]; // Текст выбранного ответа (например, "JavaScript")
-                  const correctAnswerText = question.correctAnswer; // Текст правильного ответа (например, "JavaScript")
+                {quiz.questions.map((question, qIndex) => {
+                  const userAnswerIndex = selectedAnswers[qIndex];
+                  const userAnswerText =
+                    userAnswerIndex !== undefined
+                      ? question.options[userAnswerIndex]
+                      : "❌ Нет ответа";
 
-                  // Сравниваем текст выбранного ответа с текстом правильного ответа
+                  // Вариант 1: correctAnswer — это текст
+                  const correctAnswerText = question.correctAnswer;
                   const isCorrect = userAnswerText === correctAnswerText;
 
+                  // Вариант 2: correctAnswer — это индекс
+                  // const correctAnswerText = question.options[question.correctAnswer];
+                  // const isCorrect = userAnswerIndex === question.correctAnswer;
+
                   return (
-                    <li
-                      key={index}
+                    <div
+                      key={qIndex}
                       className={`detailed-results__item ${
-                        isCorrect
-                          ? "detailed-results__item--correct"
-                          : "detailed-results__item--incorrect"
+                        isCorrect ? "correct" : "incorrect"
                       }`}
                     >
-                      <div className="detailed-results__question">
-                        <strong>Вопрос {index + 1}:</strong> {question.question}
-                      </div>
-
-                      <div className="detailed-results__user-answer">
-                        <span className="detailed-results__label">
-                          Ваш ответ:
-                        </span>
-                        <span>{convertOptionToString(userAnswerText)}</span>
-                      </div>
-
+                      <p>
+                        Вопрос {qIndex + 1}: {question.question}
+                      </p>
+                      <p>Ваш ответ: {convertOptionToString(userAnswerText)}</p>
                       {!isCorrect && (
-                        <div className="detailed-results__correct-answer">
-                          <span className="detailed-results__label">
-                            Правильный ответ:
-                          </span>
-                          <span>
-                            {convertOptionToString(correctAnswerText)}
-                          </span>
-                        </div>
+                        <p>
+                          Правильный ответ:{" "}
+                          {convertOptionToString(correctAnswerText)}
+                        </p>
                       )}
-
-                      <div className="detailed-results__status">
-                        {isCorrect ? (
-                          <span className="detailed-results__correct">
-                            ✓ Верно
-                          </span>
-                        ) : (
-                          <span className="detailed-results__incorrect">
-                            ✗ Неверно
-                          </span>
-                        )}
-                      </div>
-                    </li>
+                    </div>
                   );
                 })}
               </div>

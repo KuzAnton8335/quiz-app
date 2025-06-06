@@ -37,39 +37,40 @@ router.get("/:id", async (req, res) => {
 });
 
 // Проверьте ответы на тест (POST /user/quizdb/quizzes/:id/check-answers)
-router.post("/:id ", async (req, res) => {
+router.post("/:id/check-answers", async (req, res) => {
   try {
     const quiz = await Quiz.findById(req.params.id);
     if (!quiz) {
       return res.status(404).json({ message: "Quiz not found" });
     }
 
-    const userAnswers = req.body.correctAnswer; 
+    const userAnswers = req.body.answers;
     const results = [];
     let score = 0;
 
     quiz.questions.forEach((question, index) => {
       const userAnswer = userAnswers[index];
-      const isCorrect = userAnswer === question.correctAnswer;
+      const isCorrect =
+        JSON.stringify(userAnswer) === JSON.stringify(question.correctAnswer);
 
       if (isCorrect) {
         score++;
       }
 
       results.push({
-        questionId: question.id,
-        questionText: question.question,
+        questionId: question._id,
+        questionText: question.text,
         userAnswer,
         correctAnswer: question.correctAnswer,
         isCorrect,
       });
     });
 
-    const percentage = Math.round((score / quiz.questions.length) * 100);
+    const percentage = (score / quiz.questions.length) * 100;
 
     res.json({
       quizId: quiz._id,
-      quizTitle: quiz.testName,
+      quizTitle: quiz.title,
       totalQuestions: quiz.questions.length,
       correctAnswers: score,
       percentage,
