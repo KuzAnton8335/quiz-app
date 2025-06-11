@@ -65,6 +65,10 @@
 
 .detailed-results {
 	margin-top: 2rem;
+	
+	&__title{
+		padding-bottom: 12px;
+	}
 
 	&__list {
 		list-style: none;
@@ -72,18 +76,19 @@
 	}
 
 	&__item {
-		padding: 1rem;
 		margin-bottom: 1rem;
+		padding: 1rem;
 		border-radius: 4px;
-
-		&--correct {
-			background-color: rgba(0, 255, 0, 0.1);
-			border-left: 4px solid green;
+		box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+		
+		&.correct {
+			background-color: #e6f7e6;
+			border-left: 4px solid #4caf50;
 		}
-
-		&--incorrect {
-			background-color: rgba(255, 0, 0, 0.1);
-			border-left: 4px solid red;
+		
+		&.incorrect {
+			background-color: #ffebee;
+			border-left: 4px solid #f44336;
 		}
 	}
 
@@ -98,13 +103,5 @@
 
 	&__status {
 		margin-top: 0.5rem;
-	}
-
-	&__correct {
-		color: green;
-	}
-
-	&__incorrect {
-		color: red;
 	}
 }

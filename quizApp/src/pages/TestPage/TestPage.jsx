@@ -70,16 +70,28 @@ const TestPage = () => {
     try {
       setLoading(true);
       const response = await checkAnswers(quiz._id, selectedAnswers);
-      console.log("Full API response:", response); // Проверяем структуру
-
-      setResult({
-        correctAnswers: response.correctCount, // Используем correctCount вместо correctAnswers
-        percentage: Math.round(
-          (response.correctCount / response.totalQuestions) * 100
-        ),
-        totalQuestions: response.totalQuestions,
-      });
-
+      
+      // Вариант 1: если API возвращает правильные данные
+      if (response.correctCount !== undefined) {
+        setResult({
+          correctAnswers: response.correctCount,
+          percentage: Math.round((response.correctCount / response.totalQuestions) * 100),
+          totalQuestions: response.totalQuestions,
+        });
+      }
+      // Вариант 2: если API не возвращает нужные данные
+      else {
+        const correctCount = quiz.questions.reduce((acc, question, index) => {
+          return acc + (question.correctAnswer === selectedAnswers[index] ? 1 : 0);
+        }, 0);
+        
+        setResult({
+          correctAnswers: correctCount,
+          percentage: Math.round((correctCount / quiz.questions.length) * 100),
+          totalQuestions: quiz.questions.length,
+        });
+      }
+      
       setShowResult(true);
     } catch (err) {
       setError(err.message);
@@ -110,6 +122,10 @@ const TestPage = () => {
     }
     return "Question not available";
   };
+  
+  console.log('Result data:', result);
+  console.log('Selected answers:', selectedAnswers);
+  console.log('Quiz questions:', quiz.questions);
 
   return (
     <div className="test-page">
@@ -166,24 +182,10 @@ const TestPage = () => {
               {result ? (
                 <>
                   <p className="test-page__result-corrent">
-                    Верных ответов:{" "}
-                    {result?.correctAnswers ??
-                      quiz.questions.filter(
-                        (q, i) => q.correctAnswer === selectedAnswers[i]
-                      ).length}{" "}
-                    из {quiz.questions.length}
+                    Верных ответов: {result.correctAnswers} из {result.totalQuestions}
                   </p>
                   <p>
-                    Процент правильных ответов:{" "}
-                    {result?.percentage ??
-                      Math.round(
-                        (quiz.questions.filter(
-                          (q, i) => q.correctAnswer === selectedAnswers[i]
-                        ).length /
-                          quiz.questions.length) *
-                          100
-                      )}
-                    %
+                    Процент правильных ответов: {result.percentage}%
                   </p>
                 </>
               ) : (
@@ -191,7 +193,7 @@ const TestPage = () => {
               )}
 
               <div className="detailed-results">
-                <h3>Детализация ответов:</h3>
+                <h3 className="detailed-results__title">Детализация ответов:</h3>
                 {quiz.questions.map((question, qIndex) => {
                   const userAnswerIndex = selectedAnswers[qIndex];
                   const userAnswerText =
@@ -201,7 +203,7 @@ const TestPage = () => {
 
                   // Вариант 1: correctAnswer — это текст
                   const correctAnswerText = question.correctAnswer;
-                  const isCorrect = userAnswerText === correctAnswerText;
+                  const isCorrect = userAnswerIndex === question.correctAnswer;
 
                   // Вариант 2: correctAnswer — это индекс
                   // const correctAnswerText = question.options[question.correctAnswer];
